@@ -1,7 +1,7 @@
 import rq
 from flask import Flask
 import pathlib
-
+import dotfile
 from redis.client import Redis
 
 roi_storage = pathlib.Path("rois").absolute()

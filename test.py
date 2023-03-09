@@ -1,7 +1,4 @@
 import json
-
-from src import ffmpeg_concat_and_pipe_partial_videos, encode
-
 import requests
 
 a = requests.request(
@@ -17,9 +14,6 @@ a = requests.request(
 print(a.text)
 
 temp = json.loads(a.text)
-
-# ffmpeg_concat_and_pipe_partial_videos(17.4, 25)
-#encode("rois/5.txt", 12, 5, "out2.hevc")
 
 a = requests.request(
     "POST",

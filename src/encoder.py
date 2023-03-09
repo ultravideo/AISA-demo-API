@@ -1,8 +1,12 @@
+import os
 from pathlib import Path
-from subprocess import Popen, PIPE, check_call, DEVNULL
+from subprocess import Popen, PIPE, DEVNULL
 from rq import get_current_job
+from dotenv import load_dotenv
 
 from src import video_storage
+
+load_dotenv()
 
 
 def ffmpeg_concat_and_pipe_partial_videos(time, duration):
@@ -41,12 +45,13 @@ def encode(roi_file, start_time, duration, out_file):
         stdout=PIPE,
         stderr=DEVNULL
     )
+    resolution = os.environ["RESOLUTION"] or "1920x1080"
     kvazaar_handle = Popen(
         [
             "kvazaar",
             "--input-fps", "30",
             "-i", "-",
-            "--input-res", "1920x1080",
+            "--input-res", resolution,
             "--roi", roi_file,
             "--preset", "medium",
             "--qp", "32",
@@ -61,8 +66,6 @@ def encode(roi_file, start_time, duration, out_file):
         a = line.decode()
         if a.startswith("POC"):
             frames_encoded += 1
-        else:
-            print(a)
         job.meta["progress"] = 100 * frames_encoded / total_frames
         job.save_meta()
 
@@ -73,10 +76,3 @@ def encode(roi_file, start_time, duration, out_file):
 
     out = (video_storage / job_get_id).with_suffix(".hevc")
     Path(out_file).rename(out)
-
-
-class Kvazaar:
-
-    def __init__(self):
-        pass
-

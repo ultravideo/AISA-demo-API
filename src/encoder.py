@@ -1,4 +1,6 @@
 import os
+import shutil
+from datetime import datetime, timedelta
 from pathlib import Path
 from subprocess import Popen, PIPE, DEVNULL
 from rq import get_current_job
@@ -10,17 +12,27 @@ load_dotenv()
 
 
 def ffmpeg_concat_and_pipe_partial_videos(time, duration):
-    current_segment = int(time // 10)
-    total_time = (time % 10)
-    inputs = ["ffmpeg", f"-ss", f"{total_time}", "-i", f"media/output{current_segment}.mp4"]
+    print(time, duration)
+    segments = sorted(os.listdir((Path(__file__) / ".." / ".." / "media").resolve()))
+    i = 0
+    current_segment = None
+    segment_start = None
+    for i, v in enumerate(segments):
+        r = datetime.fromisoformat(v.split("_")[1][:-4])
+        if r >= (time - timedelta(seconds=10)):
+            current_segment = v
+            segment_start = r
+            break
+
+    seek = time - segment_start
+    inputs = ["ffmpeg", f"-ss", f"{seek.seconds}.{seek.microseconds}", "-i", f"media/{current_segment}"]
     concat = [f"[0:v]"]
-    total_time = 10 - total_time
+    total_time = 10 - seek.seconds - seek.microseconds / 1e7
 
     while total_time < duration:
-        current_segment += 1
-        current_segment %= 60
+        i += 1
         concat.append(f"[{len(concat)}:v]")
-        inputs.extend(["-i", f"media/output{current_segment}.mp4"])
+        inputs.extend(["-i", f"media/{segments[i]}"])
         total_time += 10
 
     concat.append(f"concat=n={len(concat)}[outv]")
@@ -75,4 +87,4 @@ def encode(roi_file, start_time, duration, out_file):
     kvazaar_handle.wait()
 
     out = (video_storage / job_get_id).with_suffix(".hevc")
-    Path(out_file).rename(out)
+    shutil.move(out_file, out)

@@ -1,3 +1,4 @@
+import datetime
 from pathlib import Path
 
 from flask import request, Response
@@ -108,9 +109,9 @@ def start_encoding():
     if not f.exists():
         return error_response(400, "missing roi id")
     try:
-        start_point = float(data.get("start"))
-    except TypeError:
-        return error_response(400, "Invalid start point")
+        start_point = datetime.datetime.fromisoformat(data.get("start"))
+    except (TypeError, ValueError) as e:
+        return error_response(400, "Invalid start point" + str(e))
     try:
         duration = float(data.get("duration"))
     except TypeError:

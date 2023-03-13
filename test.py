@@ -1,5 +1,7 @@
+import datetime
 import json
 import requests
+from src import ffmpeg_concat_and_pipe_partial_videos
 
 a = requests.request(
     "POST",
@@ -11,8 +13,6 @@ a = requests.request(
 
 )
 
-print(a.text)
-
 temp = json.loads(a.text)
 
 a = requests.request(
@@ -20,7 +20,7 @@ a = requests.request(
     "http://127.0.0.1:5000/encode",
     json={
         "roi_id": temp["id"],
-        "start": 50,
+        "start": (datetime.datetime.now() - datetime.timedelta(seconds=60)).isoformat(),
         "duration": 12,
     }
 )

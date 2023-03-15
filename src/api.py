@@ -121,9 +121,10 @@ def start_encoding():
         duration = float(data.get("duration"))
     except TypeError:
         return error_response(400, "duration")
+    camera = data.get("camera") or "output"
     a = app.task_queue.enqueue(
         "src.encoder.encode",
-        f, start_point, duration, mkstemp()[1]
+        f, start_point, duration, mkstemp()[1], camera
     )
     print(a.get_id())
     return {"id": a.get_id()}

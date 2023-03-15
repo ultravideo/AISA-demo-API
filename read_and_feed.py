@@ -1,4 +1,5 @@
 import os
+import sys
 from collections import deque
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -9,9 +10,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def main():
-    media_dir = (Path(__file__) / ".." / "media").resolve()
-    media_dir.mkdir(exist_ok=True)
+def main(camera_name="output"):
+    media_dir = (Path(__file__) / ".." / "media" / camera_name).resolve()
+    media_dir.mkdir(exist_ok=True, parents=True)
     for file in media_dir.glob("*"):
         file.unlink()
     resolution = os.environ["RESOLUTION"] or "1920x1080"
@@ -80,4 +81,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    camera = sys.argv[1] if len(sys.argv) > 1 else "output"
+    main(camera)

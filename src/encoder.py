@@ -1,5 +1,4 @@
 import os
-import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
 from subprocess import Popen, PIPE, DEVNULL, check_call
@@ -14,9 +13,8 @@ from src import video_storage, roi_storage
 load_dotenv()
 
 
-def ffmpeg_concat_and_pipe_partial_videos(time, duration):
-    print(time, duration)
-    segments = sorted(os.listdir((Path(__file__) / ".." / ".." / "media").resolve()))
+def ffmpeg_concat_and_pipe_partial_videos(time, duration, camera):
+    segments = sorted(os.listdir((Path(__file__) / ".." / ".." / "media" / camera).resolve()))
     i = 0
     current_segment = None
     segment_start = None
@@ -28,14 +26,14 @@ def ffmpeg_concat_and_pipe_partial_videos(time, duration):
             break
 
     seek = time - segment_start
-    inputs = ["ffmpeg", f"-ss", f"{seek.seconds}.{seek.microseconds}", "-i", f"media/{current_segment}"]
+    inputs = ["ffmpeg", f"-ss", f"{seek.seconds}.{seek.microseconds}", "-i", f"media/{camera}/{current_segment}"]
     concat = [f"[0:v]"]
     total_time = 10 - seek.seconds - seek.microseconds / 1e7
 
     while total_time < duration:
         i += 1
         concat.append(f"[{len(concat)}:v]")
-        inputs.extend(["-i", f"media/{segments[i]}"])
+        inputs.extend(["-i", f"media/{camera}/{segments[i]}"])
         total_time += 10
 
     concat.append(f"concat=n={len(concat)}[outv]")
@@ -61,10 +59,10 @@ def preprocess_roi(f):
     return name
 
 
-def encode(roi_file, start_time, duration, out_file):
+def encode(roi_file, start_time, duration, out_file, camera):
     job = get_current_job()
     job.meta["file"] = out_file
-    ffmpeg_cmd = ffmpeg_concat_and_pipe_partial_videos(start_time, duration)
+    ffmpeg_cmd = ffmpeg_concat_and_pipe_partial_videos(start_time, duration, camera)
     job_get_id = job.get_id()
 
     if roi_file is not None:

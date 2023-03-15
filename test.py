@@ -1,19 +1,25 @@
 import datetime
 import json
 import requests
-from src import ffmpeg_concat_and_pipe_partial_videos
+from src.encoder import preprocess_roi
+
+width = (1920 + 63) // 64
+height = (1080 + 63) // 64
 
 a = requests.request(
     "POST",
     "http://127.0.0.1:5000/roi",
     json={
-        "type": "txt",
-        "roi": "2 2 12 0 12 0"
+        "width": width,
+        "height": height,
+        "data": [x % 2 for x in range(width * height)]
     },
 
 )
 
 temp = json.loads(a.text)
+print(temp)
+preprocess_roi(temp["id"])
 
 l = datetime.datetime.now()
 

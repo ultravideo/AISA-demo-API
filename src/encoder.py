@@ -3,10 +3,13 @@ import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
 from subprocess import Popen, PIPE, DEVNULL, check_call
+from tempfile import mkstemp
+
+import numpy as np
 from rq import get_current_job
 from dotenv import load_dotenv
 
-from src import video_storage
+from src import video_storage, roi_storage
 
 load_dotenv()
 
@@ -47,28 +50,48 @@ def ffmpeg_concat_and_pipe_partial_videos(time, duration):
     return inputs
 
 
+def preprocess_roi(f):
+    data = np.load(roi_storage / f, allow_pickle=True)
+    data *= -10
+    handle, name = mkstemp()
+    file = os.fdopen(handle, "w")
+    file.write(f"{data.shape[1]} {data.shape[0]}\n")
+    for line in data:
+        print(file=file, *line, sep=" ")
+    return name
+
+
 def encode(roi_file, start_time, duration, out_file):
     job = get_current_job()
     job.meta["file"] = out_file
     ffmpeg_cmd = ffmpeg_concat_and_pipe_partial_videos(start_time, duration)
     job_get_id = job.get_id()
+
+    if roi_file is not None:
+        roi_file = preprocess_roi(roi_file)
+
     ffmpeg_handle = Popen(
         ffmpeg_cmd,
         stdout=PIPE,
         stderr=DEVNULL
     )
     resolution = os.environ["RESOLUTION"] or "1920x1080"
-    kvazaar_handle = Popen(
-        [
-            "kvazaar",
-            "--input-fps", "30",
-            "-i", "-",
-            "--input-res", resolution,
+    encode_command = [
+        "kvazaar",
+        "--input-fps", "30",
+        "-i", "-",
+        "--input-res", resolution,
+        "--preset", "medium",
+        "--qp", "37",
+        "-o", out_file,
+    ]
+    if roi_file is not None:
+        encode_command.extend([
             "--roi", roi_file,
-            "--preset", "medium",
-            "--qp", "32",
-            "-o", out_file
-        ],
+        ])
+
+    kvazaar_handle = Popen(
+        encode_command,
         stdin=ffmpeg_handle.stdout,
         stderr=PIPE,
     )
@@ -94,3 +117,6 @@ def encode(roi_file, start_time, duration, out_file):
             "-new", out
         ]
     )
+    if roi_file is not None:
+        roi_file = Path(roi_file)
+        roi_file.unlink()

@@ -112,6 +112,8 @@ def start_encoding():
         start_point = datetime.datetime.fromisoformat(data.get("start"))
     except (TypeError, ValueError) as e:
         return error_response(400, "Invalid start point" + str(e))
+    if datetime.datetime.utcnow() - start_point > datetime.timedelta(minutes=8):
+        return error_response(400, "Starting point is too far back in the past, maximum amount is 8 minutes")
     try:
         duration = float(data.get("duration"))
     except TypeError:

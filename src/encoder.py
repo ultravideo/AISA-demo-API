@@ -2,7 +2,7 @@ import os
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
-from subprocess import Popen, PIPE, DEVNULL
+from subprocess import Popen, PIPE, DEVNULL, check_call
 from rq import get_current_job
 from dotenv import load_dotenv
 
@@ -86,5 +86,11 @@ def encode(roi_file, start_time, duration, out_file):
 
     kvazaar_handle.wait()
 
-    out = (video_storage / job_get_id).with_suffix(".hevc")
-    shutil.move(out_file, out)
+    out = (video_storage / job_get_id).with_suffix(".mp4")
+    check_call(
+        [
+            "MP4Box",
+            "-add", out_file,
+            "-new", out
+        ]
+    )

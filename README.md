@@ -1,3 +1,4 @@
+* Install `ffmpeg` and `gpac` 
 * clone the Kvazaar repository and build and install Kvazaar according to the instructions in Kvazaar repository. https://github.com/ultravideo/kvazaar
 * create and activate virtual env `python -m venv venv && source /venv/bin/activate`
 * install requirements `pip install -r requirements.txt`

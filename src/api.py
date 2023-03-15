@@ -131,7 +131,7 @@ def get_encoding(id_):
         return {
             "id": id_,
             "progress": 100,
-            "video_url": f"/video/{id_}.hevc"
+            "video_url": f"/video/{id_}.mp4"
         }
     try:
         a = rq.job.Job.fetch(id_, connection=app.redis)
@@ -151,4 +151,4 @@ def get_video(id_):
     f = (Path("videos") / id_)
     if not f.exists():
         return error_response(404, "video doesnt exist")
-    return Response(f.read_bytes(), mimetype="video/H265")
+    return Response(f.read_bytes(), mimetype="video/MP4")

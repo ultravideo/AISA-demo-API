@@ -80,7 +80,7 @@ def encode(roi_file, start_time, duration, out_file, camera):
         "-i", "-",
         "--input-res", resolution,
         "--preset", "medium",
-        "--qp", "37",
+        "--qp", "37" if roi_file is not None else "27",
         "-o", out_file,
     ]
     if roi_file is not None:

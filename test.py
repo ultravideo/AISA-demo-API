@@ -15,12 +15,14 @@ a = requests.request(
 
 temp = json.loads(a.text)
 
+l = datetime.datetime.now()
+
 a = requests.request(
     "POST",
     "http://127.0.0.1:5000/encode",
     json={
         "roi_id": temp["id"],
-        "start": (datetime.datetime.now() - datetime.timedelta(seconds=60)).isoformat(),
+        "start": (datetime.datetime.utcnow() - datetime.timedelta(seconds=60)).isoformat(),
         "duration": 12,
     }
 )

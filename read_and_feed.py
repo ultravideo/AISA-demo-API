@@ -47,7 +47,7 @@ def main():
     width, height = [int(x) for x in resolution.split("x")]
     segments = deque()
     while True:
-        segment_start_time = datetime.now()
+        segment_start_time = datetime.utcnow()
         output_file = media_dir / f'output_{segment_start_time.isoformat()}.mp4'
         b = Popen(
             [
@@ -73,7 +73,7 @@ def main():
         if len(segments) > 60:
             segment_to_remove = segments.popleft()
             segment_to_remove.unlink()
-        segment_end_time = datetime.now()
+        segment_end_time = datetime.utcnow()
         # This is not needed if the input is from actual camera
         sleep(10 - (segment_end_time - segment_start_time).total_seconds())
     a.stdout.close()

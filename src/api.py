@@ -108,9 +108,11 @@ def delete_roi_region(id_):
 def start_encoding():
     data = request.get_json()
     roi_id = data.get("roi_id")
-    f = roi_storage / roi_id
-    if not f.exists():
-        f = None
+    f = None
+    if roi_id is not None:
+        f = roi_storage / roi_id
+        if not f.exists():
+            return error_response("400", "roi file does not exist")
     try:
         start_point = datetime.datetime.fromisoformat(data.get("start"))
     except (TypeError, ValueError) as e:

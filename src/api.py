@@ -61,7 +61,7 @@ def update_roi_region(id_):
     height = data.get("height")
     width = data.get("width")
 
-    roi_data = np.load(f)
+    roi_data = np.load(f, allow_pickle=True)
     if roi_data.shape != (height, width):
         return error_response(400, "new roi has different resolution to the old one")
 
@@ -81,13 +81,14 @@ def get_roi_region(id_):
     if not f.exists():
         return error_response(400, "roi file does not exist")
 
-    data = np.load(f)
+    data = np.load(f, allow_pickle=True)
 
     return jsonify(
         {
             "id": id_,
             "width": data.shape[1],
             "height": data.shape[0],
+            "data": [int(x) for x in data.flatten()]
         }
     )
 
@@ -156,7 +157,7 @@ def get_encoding(id_):
 
 @app.route("/video/<id_>")
 def get_video(id_):
-    f = (Path("videos") / id_)
+    f = (video_storage / id_)
     if not f.exists():
         return error_response(404, "video doesnt exist")
     return Response(f.read_bytes(), mimetype="video/MP4")

@@ -4,6 +4,7 @@
 * install requirements `pip install -r requirements.txt`
 * install redis and start `redis-server`
 * start `rq worker`
+* Initialize database `flask --app src db upgrade`
 * start server `flask --app src run`
 * run `python read_and_feed.py` is used to divide the input video into 10 second segments. Currently, the time stamping 
 starts from zero instead of the real time stamp.

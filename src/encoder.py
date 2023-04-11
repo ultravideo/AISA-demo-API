@@ -8,7 +8,7 @@ import numpy as np
 from rq import get_current_job
 from dotenv import load_dotenv
 
-from src import video_storage, roi_storage
+from src import video_storage, roi_storage, models, db, app, api
 
 load_dotenv()
 
@@ -59,7 +59,7 @@ def preprocess_roi(f):
     return name
 
 
-def encode(roi_file, start_time, duration, out_file, camera):
+def encode(roi_file, start_time, duration, out_file, camera, out_path):
     job = get_current_job()
     job.meta["file"] = out_file
     ffmpeg_cmd = ffmpeg_concat_and_pipe_partial_videos(start_time, duration, camera)
@@ -107,14 +107,21 @@ def encode(roi_file, start_time, duration, out_file, camera):
 
     kvazaar_handle.wait()
 
-    out = (video_storage / job_get_id).with_suffix(".mp4")
+    if out_path is None:
+        out_path = (video_storage / job_get_id).with_suffix(".mp4")
     check_call(
         [
             "MP4Box",
             "-add", out_file,
-            "-new", out
+            "-new", out_path
         ]
     )
+
+    with app.app_context():
+        r = models.Encoding(id=job_get_id, out_path=str(out_path))
+        db.session.add(r)
+        db.session.commit()
+
     if roi_file is not None:
         roi_file = Path(roi_file)
         roi_file.unlink()

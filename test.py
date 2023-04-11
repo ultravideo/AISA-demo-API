@@ -1,5 +1,7 @@
 import datetime
 import json
+from pathlib import Path
+
 import requests
 from src.encoder import preprocess_roi
 
@@ -19,6 +21,13 @@ a = requests.request(
 
 temp = json.loads(a.text)
 print(temp)
+
+
+a = requests.request(
+    "GET",
+    f"http://127.0.0.1:5000/roi/{temp['id']}"
+)
+print(json.loads(a.text))
 preprocess_roi(temp["id"])
 
 l = datetime.datetime.now()
@@ -30,6 +39,7 @@ a = requests.request(
         "roi_id": temp["id"],
         "start": (datetime.datetime.utcnow() - datetime.timedelta(seconds=60)).isoformat(),
         "duration": 12,
+        "saved_path": str((Path(__file__) / ".." / "video_name.mp4").resolve())
     }
 )
 print(a.text)

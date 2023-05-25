@@ -18,19 +18,22 @@ def ffmpeg_concat_and_pipe_partial_videos(time, duration, camera):
     i = 0
     current_segment = None
     segment_start = None
+    start_time = time - timedelta(seconds=duration)
     for i, v in enumerate(segments):
         r = datetime.fromisoformat(v.split("_")[1][:-4])
-        if r >= (time - timedelta(seconds=10)):
+        if r >= start_time:
+            break
+        else:
             current_segment = v
             segment_start = r
-            break
 
-    seek = time - segment_start
+    seek = start_time - segment_start
     inputs = ["ffmpeg", f"-ss", f"{seek.seconds}.{seek.microseconds}", "-i", f"media/{camera}/{current_segment}"]
     concat = [f"[0:v]"]
     total_time = 10 - seek.seconds - seek.microseconds / 1e7
+    print(f"segments: {segments}")
 
-    while total_time < duration:
+    while total_time < duration and i < len(segments):
         i += 1
         concat.append(f"[{len(concat)}:v]")
         inputs.extend(["-i", f"media/{camera}/{segments[i]}"])
@@ -68,6 +71,7 @@ def encode(roi_file, start_time, duration, out_file, camera, out_path):
     if roi_file is not None:
         roi_file = preprocess_roi(roi_file)
 
+    print(f"ffmpeg cmd: {ffmpeg_cmd}")
     ffmpeg_handle = Popen(
         ffmpeg_cmd,
         stdout=PIPE,
@@ -79,9 +83,9 @@ def encode(roi_file, start_time, duration, out_file, camera, out_path):
         "--input-fps", "30",
         "-i", "-",
         "--input-res", resolution,
-        "--preset", "medium",
+        "--preset", "ultrafast",
         "--qp", "37" if roi_file is not None else "27",
-        "-o", out_file,
+        "-o", str(out_file),
     ]
     if roi_file is not None:
         encode_command.extend([
@@ -107,13 +111,15 @@ def encode(roi_file, start_time, duration, out_file, camera, out_path):
 
     kvazaar_handle.wait()
 
+    print(f"Kvazaar done {str(out_file)}")
+
     if out_path is None:
         out_path = (video_storage / job_get_id).with_suffix(".mp4")
     check_call(
         [
             "MP4Box",
-            "-add", out_file,
-            "-new", out_path
+            "-add", str(out_file),
+            "-new", str(out_path)
         ]
     )
 

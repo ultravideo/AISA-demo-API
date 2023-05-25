@@ -107,8 +107,10 @@ def delete_roi_region(id_):
 
 @app.route("/encode", methods=["POST"])
 def start_encoding():
+    print('start encoding')
     data = request.get_json()
     roi_id = data.get("roi_id")
+    print(data)
     f = None
     if roi_id is not None:
         f = roi_storage / roi_id
@@ -144,7 +146,6 @@ def start_encoding():
         "src.encoder.encode",
         f, start_point, duration, mkstemp()[1], camera, out_path
     )
-    print(a.get_id())
     return {"id": a.get_id()}
 
 

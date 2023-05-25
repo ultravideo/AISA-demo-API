@@ -76,7 +76,8 @@ def main(camera_name="output"):
             segment_to_remove.unlink()
         segment_end_time = datetime.utcnow()
         # This is not needed if the input is from actual camera
-        sleep(10 - (segment_end_time - segment_start_time).total_seconds())
+        if (10 - (segment_end_time - segment_start_time).total_seconds()) > 0:
+            sleep(10 - (segment_end_time - segment_start_time).total_seconds())
     a.stdout.close()
 
 

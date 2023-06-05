@@ -75,7 +75,7 @@ def encode(roi_file, start_time, duration, out_file, camera, out_path):
     ffmpeg_handle = Popen(
         ffmpeg_cmd,
         stdout=PIPE,
-        # stderr=DEVNULL
+        stderr=DEVNULL
     )
     resolution = os.environ["RESOLUTION"] or "1920x1080"
     encode_command = [
@@ -87,10 +87,10 @@ def encode(roi_file, start_time, duration, out_file, camera, out_path):
         "--qp", "37" if roi_file is not None else "27",
         "-o", str(out_file),
     ]
-    # if roi_file is not None:
-        # encode_command.extend([
-        #     "--roi", roi_file,
-        # ])
+    if roi_file is not None:
+        encode_command.extend([
+            "--roi", roi_file,
+        ])
 
     kvazaar_handle = Popen(
         encode_command,

@@ -30,7 +30,9 @@ RUN python3.8 -m venv /venv
 ENV PATH=/venv/bin:$PATH
 
 COPY requirements.txt /app/
-RUN pip install --upgrade pip cmake
+RUN pip install --upgrade setuptools pip 
+RUN pip install scikit-build
+RUN pip install --upgrade cmake
 RUN python --version
 RUN pip --version
 RUN pip install -r requirements.txt

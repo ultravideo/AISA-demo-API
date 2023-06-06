@@ -26,8 +26,9 @@ def save_10_seconds_webcam(output_path, device):
     width, height = [int(x) for x in resolution.split("x")]
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-    cap.set(cv2.CAP_PROP_FPS, 30)
     fps = cap.get(cv2.CAP_PROP_FPS)
+    # print(f'fps: {fps}')
+    # cap.set(cv2.CAP_PROP_FPS, 30)
 
 
     # Calculate the number of frames to capture for 10 seconds

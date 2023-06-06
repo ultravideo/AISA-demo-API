@@ -4,12 +4,14 @@ RUN echo 'tzdata tzdata/Areas select Europe' | debconf-set-selections
 RUN echo 'tzdata tzdata/Zones/Europe select Paris' | debconf-set-selections
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata && \
-    apt-get install -y software-properties-common && \
+    apt-get -y install build-essential zlib1g-dev \
+    libncurses5-dev libgdbm-dev libnss3-dev \
+    libssl-dev libreadline-dev libffi-dev curl software-properties-common && \
     rm -rf /var/lib/apt/lists/*
 RUN add-apt-repository ppa:deadsnakes/ppa
 
 RUN apt-get update \
-    && apt-get install build-essential git curl ffmpeg python3.9 python3-pip python3.9-venv \
+    && apt-get install build-essential git curl ffmpeg python3.8 python3-pip python3.8-venv \
     zlib1g-dev libfreetype6-dev libjpeg62-dev libpng-dev libmad0-dev libfaad-dev libogg-dev libvorbis-dev libtheora-dev liba52-0.7.4-dev libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libavdevice-dev libxv-dev x11proto-video-dev libgl1-mesa-dev x11proto-gl-dev libxvidcore-dev libssl-dev libjack-dev libasound2-dev libpulse-dev libsdl2-dev dvb-apps mesa-utils \
     libpq-dev libsm6 libgl1 libxext6 -y
 
@@ -24,7 +26,7 @@ RUN make install
 
 WORKDIR /app
 
-RUN python3.9 -m venv /venv
+RUN python3.8 -m venv /venv
 ENV PATH=/venv/bin:$PATH
 
 COPY requirements.txt /app/

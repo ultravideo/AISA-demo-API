@@ -31,13 +31,12 @@ def ffmpeg_concat_and_pipe_partial_videos(time, duration, camera):
     inputs = ["ffmpeg", f"-ss", f"{seek.seconds}.{seek.microseconds}", "-i", f"media/{camera}/{current_segment}"]
     concat = [f"[0:v]"]
     total_time = 10 - seek.seconds - seek.microseconds / 1e7
-    print(f"segments: {segments}")
 
     while total_time < duration and i < len(segments):
-        i += 1
         concat.append(f"[{len(concat)}:v]")
         inputs.extend(["-i", f"media/{camera}/{segments[i]}"])
         total_time += 10
+        i += 1
 
     concat.append(f"concat=n={len(concat)}[outv]")
     inputs.extend(

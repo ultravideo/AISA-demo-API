@@ -68,7 +68,7 @@ def ffmpeg_concat_and_pipe_partial_videos(time, duration, camera):
 
 def preprocess_roi(f):
     data = np.load(roi_storage / f, allow_pickle=True)
-    data *= -10
+    # data *= -10
     handle, name = mkstemp()
     file = os.fdopen(handle, "w")
     file.write(f"{data.shape[1]} {data.shape[0]}\n")
@@ -111,7 +111,6 @@ def encode(roi_file, start_time, duration, out_file, camera, out_path):
                 roi_file,
             ]
         )
-
     kvazaar_handle = Popen(
         encode_command,
         stdin=ffmpeg_handle.stdout,

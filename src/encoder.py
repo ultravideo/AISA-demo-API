@@ -14,21 +14,30 @@ load_dotenv()
 
 
 def ffmpeg_concat_and_pipe_partial_videos(time, duration, camera):
-    segments = sorted(os.listdir((Path(__file__) / ".." / ".." / "media" / camera).resolve()))
+    segments = sorted(
+        os.listdir((Path(__file__) / ".." / ".." / "media" / camera).resolve())
+    )
     i = 0
     current_segment = None
     segment_start = None
     start_time = time - timedelta(seconds=duration)
-    for i, v in enumerate(segments):
-        r = datetime.fromisoformat(v.split("_")[1][:-4])
-        if r >= start_time:
-            break
-        else:
-            current_segment = v
-            segment_start = r
+    for file in segments:
+        if file.endswith(".mp4"):
+            r = datetime.fromisoformat(file.split("_")[1][:-4])
+            if r >= start_time:
+                break
+            else:
+                current_segment = file
+                segment_start = r
 
     seek = start_time - segment_start
-    inputs = ["ffmpeg", f"-ss", f"{seek.seconds}.{seek.microseconds}", "-i", f"media/{camera}/{current_segment}"]
+    inputs = [
+        "ffmpeg",
+        f"-ss",
+        f"{seek.seconds}.{seek.microseconds}",
+        "-i",
+        f"media/{camera}/{current_segment}",
+    ]
     concat = [f"[0:v]"]
     total_time = 10 - seek.seconds - seek.microseconds / 1e7
 
@@ -40,12 +49,19 @@ def ffmpeg_concat_and_pipe_partial_videos(time, duration, camera):
 
     concat.append(f"concat=n={len(concat)}[outv]")
     inputs.extend(
-        ["-filter_complex", "".join(concat),
-         "-map", "[outv]",
-         "-t", str(duration),
-         "-f", "rawvideo",
-         "-pix_fmt", "yuv420p",
-         "-"]
+        [
+            "-filter_complex",
+            "".join(concat),
+            "-map",
+            "[outv]",
+            "-t",
+            str(duration),
+            "-f",
+            "rawvideo",
+            "-pix_fmt",
+            "yuv420p",
+            "-",
+        ]
     )
     return inputs
 
@@ -71,25 +87,30 @@ def encode(roi_file, start_time, duration, out_file, camera, out_path):
         roi_file = preprocess_roi(roi_file)
 
     print(f"ffmpeg cmd: {ffmpeg_cmd}")
-    ffmpeg_handle = Popen(
-        ffmpeg_cmd,
-        stdout=PIPE,
-        stderr=DEVNULL
-    )
+    ffmpeg_handle = Popen(ffmpeg_cmd, stdout=PIPE, stderr=DEVNULL)
     resolution = os.environ["RESOLUTION"] or "1920x1080"
     encode_command = [
         "kvazaar",
-        "--input-fps", "30",
-        "-i", "-",
-        "--input-res", resolution,
-        "--preset", "ultrafast",
-        "--qp", "37" if roi_file is not None else "27",
-        "-o", str(out_file),
+        "--input-fps",
+        "30",
+        "-i",
+        "-",
+        "--input-res",
+        resolution,
+        "--preset",
+        "ultrafast",
+        "--qp",
+        "37" if roi_file is not None else "27",
+        "-o",
+        str(out_file),
     ]
     if roi_file is not None:
-        encode_command.extend([
-            "--roi", roi_file,
-        ])
+        encode_command.extend(
+            [
+                "--roi",
+                roi_file,
+            ]
+        )
 
     kvazaar_handle = Popen(
         encode_command,
@@ -115,13 +136,7 @@ def encode(roi_file, start_time, duration, out_file, camera, out_path):
 
     if out_path is None:
         out_path = (video_storage / job_get_id).with_suffix(".mp4")
-    check_call(
-        [
-            "MP4Box",
-            "-add", str(out_file),
-            "-new", str(out_path)
-        ]
-    )
+    check_call(["MP4Box", "-add", str(out_file), "-new", str(out_path)])
 
     with app.app_context():
         r = models.Encoding(id=job_get_id, out_path=str(out_path))

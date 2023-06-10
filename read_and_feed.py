@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 def save_10_seconds_webcam(output_path, device):
     # Open the webcam
     cap = cv2.VideoCapture(0)  # Use 0 for the default camera
@@ -29,7 +30,6 @@ def save_10_seconds_webcam(output_path, device):
     fps = cap.get(cv2.CAP_PROP_FPS)
     # print(f'fps: {fps}')
     # cap.set(cv2.CAP_PROP_FPS, 30)
-
 
     # Calculate the number of frames to capture for 10 seconds
     num_frames = int(fps * 10)
@@ -100,16 +100,21 @@ def main(camera_name="output", stream=""):
     else:
         a = Popen(
             [
-                'ffmpeg',
-                '-f', 'lavfi',
-                '-i', f'color=c=black:size={resolution}',
-                '-vf', rf"drawtext=fontsize=100:fontcolor=white:x=(w-text_w)/2:y=(h-text_h)/2:text=%{{n}}",
-                '-f', "rawvideo",
-                '-pix_fmt', "yuv420p",
-                '-'
+                "ffmpeg",
+                "-f",
+                "lavfi",
+                "-i",
+                f"color=c=black:size={resolution}",
+                "-vf",
+                rf"drawtext=fontsize=100:fontcolor=white:x=(w-text_w)/2:y=(h-text_h)/2:text=%{{n}}",
+                "-f",
+                "rawvideo",
+                "-pix_fmt",
+                "yuv420p",
+                "-",
             ],
             stdout=PIPE,
-            stderr=DEVNULL
+            stderr=DEVNULL,
         )
 
     i = 0
@@ -117,29 +122,37 @@ def main(camera_name="output", stream=""):
     segments = deque()
     while True:
         segment_start_time = datetime.utcnow()
-        output_file = media_dir / f'output_{segment_start_time.isoformat()}.mp4'
+        output_file = media_dir / f"output_{segment_start_time.isoformat()}.mp4"
         if a:
             b = Popen(
                 [
-                    'ffmpeg',
-                    '-s:v', resolution,
-                    '-f', 'rawvideo',
-                    '-pix_fmt', 'yuv420p',
-                    '-r', '30',
-                    '-i', 'pipe:.yuv',
-                    "-c:v", "libx264",
+                    "ffmpeg",
+                    "-s:v",
+                    resolution,
+                    "-f",
+                    "rawvideo",
+                    "-pix_fmt",
+                    "yuv420p",
+                    "-r",
+                    "30",
+                    "-i",
+                    "pipe:.yuv",
+                    "-c:v",
+                    "libx264",
                     str(output_file),
-                    "-y"
+                    "-y",
                 ],
                 stdin=PIPE,
-                stderr=DEVNULL
+                stderr=DEVNULL,
             )
             for _ in range(30 * 10):
                 f = a.stdout.read(int(width * height * 1.5))
                 b.stdin.write(f)
             b.stdin.close()
         else:
-            save_10_seconds_webcam(str(output_file), stream if platform != "darwin" else 0)
+            save_10_seconds_webcam(
+                str(output_file), stream if platform != "darwin" else 0
+            )
 
         i += 1
         segments.append(output_file)
@@ -148,14 +161,14 @@ def main(camera_name="output", stream=""):
             segment_to_remove.unlink()
         segment_end_time = datetime.utcnow()
         # This is not needed if the input is from actual camera
-        if (10 - (segment_end_time - segment_start_time).total_seconds()) > 0:
-            sleep(10 - (segment_end_time - segment_start_time).total_seconds())
+        # if (10 - (segment_end_time - segment_start_time).total_seconds()) > 0:
+        #    sleep(10 - (segment_end_time - segment_start_time).total_seconds())
 
     if a:
         a.stdout.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     camera = sys.argv[1] if len(sys.argv) > 1 else "output"
-    stream = sys.argv[2] if len(sys.argv) > 2 else "" 
+    stream = sys.argv[2] if len(sys.argv) > 2 else ""
     main(camera, stream)

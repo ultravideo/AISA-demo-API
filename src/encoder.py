@@ -7,21 +7,23 @@ from tempfile import mkstemp
 import numpy as np
 from rq import get_current_job
 from dotenv import load_dotenv
+import time
 
 from src import video_storage, roi_storage, models, db, app, api
 
 load_dotenv()
 
 
-def ffmpeg_concat_and_pipe_partial_videos(time, duration, camera):
+def ffmpeg_concat_and_pipe_partial_videos(event_time, duration, camera):
+    time.sleep(10)
     segments = sorted(
         os.listdir((Path(__file__) / ".." / ".." / "media" / camera).resolve())
     )
     i = 0
     current_segment = None
     segment_start = None
-    start_time = time - timedelta(seconds=duration)
-    for file in segments:
+    start_time = event_time - timedelta(seconds=duration)
+    for i, file in enumerate(segments):
         if file.endswith(".mp4"):
             r = datetime.fromisoformat(file.split("_")[1][:-4])
             if r >= start_time:

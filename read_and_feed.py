@@ -44,6 +44,7 @@ def save_10_seconds_webcam(output_path, device):
 
         if not ret:
             break
+        frame = cv2.flip(frame, 1)
 
         # Add the frame to the list
         video_frames.append(frame)

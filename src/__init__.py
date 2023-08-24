@@ -1,6 +1,7 @@
 import rq
 from flask import Flask
 import pathlib
+import os
 from redis.client import Redis
 
 from flask_sqlalchemy import SQLAlchemy
@@ -14,8 +15,9 @@ if not video_storage.exists():
     video_storage.mkdir()
 
 app = Flask(__name__)
-app.redis = Redis.from_url("redis://")
-app.config["SQLALCHEMY_DATABASE_URI"] = f'sqlite:///{(pathlib.Path(__file__) / ".." / "app.db").resolve()}'
+redis_url = os.environ["REDIS_URL"] or "redis://"
+app.redis = Redis.from_url(redis_url)
+app.config["SQLALCHEMY_DATABASE_URI"] = f'sqlite:///{(pathlib.Path(__file__) / ".." / ".." / "data" / "app.db").resolve()}'
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.task_queue = rq.Queue(connection=app.redis)
 db = SQLAlchemy(app)
